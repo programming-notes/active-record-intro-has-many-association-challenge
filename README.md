@@ -101,19 +101,11 @@ From within the console run ...
 
 - `new_rating`
 
-  If we look at our `new_rating` object, it now has a value for `dog_id`.  When we shoveled `new_rating` into `tenley`'s collection of ratings, Active Record updated the `dog_id` attribute of `new_record` to match `tenley's` `id` attribute.
+  If we look at our `new_rating` object, it now has a value for `id` and `dog_id`.  When we shoveled `new_rating` into `tenley`'s collection of ratings, Active Record updated the `dog_id` attribute of `new_record` to match `tenley's` `id` attribute.  And, it saved `new_record`, which assigned the `id` attribute.
 
 - `tenley.ratings.include? new_rating`
 
   Running this, we should see that `tenley`'s ratings now include our `new_rating` object.  Note that Active Record did not query the database when we ran this.  `tenley`'s records had already been loaded.
-
-- `tenley.save`
-
-  When we run `tenley.save`, we see in the console output that Active Record ran a SQL query:  `INSERT INTO "ratings" ...`.  We saved our `Dog` object, and in doing so, we also saved `new_rating`.
-
-- `new_rating`
-
-  If we look at `new_rating`, we see that it now has an `id`.
 
 - `tenley.rater_ids`
 
@@ -129,7 +121,7 @@ From within the console run ...
 
 - `tenley.save`
 
-  As when we shoveled an unsaved `Rating` into `tenley`'s ratings collection, when we call save here on `tenley`, `tenley`'s ratings are also saved.
+  When we call save here on `tenley`, `tenley`'s newly built rating was also saved.
 
 - `tenley.ratings.where(cuteness: 10)`
 
