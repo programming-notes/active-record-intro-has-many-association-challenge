@@ -107,7 +107,7 @@ From within the console run ...
 
   Running this, we should see that `tenley`'s ratings now include our `new_rating` object.  Note that Active Record did not query the database when we ran this.  `tenley`'s records had already been loaded.
 
-- `tenley.rater_ids`
+- `tenley.ratings_ids`
 
   This returns an array of `tenley`'s rating `id`s.
 
