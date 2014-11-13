@@ -17,7 +17,7 @@ In this challenge we'll take a look at `has_many`.  A has many association betwe
 ```ruby
 class Dog < ActiveRecord::Base
   include USGeography
-  
+
   has_many :ratings
   belongs_to :owner, { class_name: "Person" }
 
@@ -88,7 +88,7 @@ From within the console run ...
 - `tenley.ratings.count`
 
   This returns the number of ratings that `tenley` has.  The method that were calling is `#ratings.count`.  It was one of the methods created when we said declared `has_many :ratings` in the class `Dog`.  In the console output, look at the SQL query that was run:  `SELECT COUNT(*) FROM "ratings"  WHERE "ratings"."dog_id" = ?  [["dog_id", 1]]`.
-  
+
   This is not a method chain the way we're used to seeing it in Ruby (i.e., call `#ratings` on `tenley` and then call `#count` on the return value).  Active Record understands `#ratings.count` and makes the appropriate SQL query.
 
 - `new_rating = Rating.new(coolness: 8, cuteness: 10, judge_id: 4)`
@@ -107,7 +107,7 @@ From within the console run ...
 
   Running this, we should see that `tenley`'s ratings now include our `new_rating` object.  Note that Active Record did not query the database when we ran this.  `tenley`'s records had already been loaded.
 
-- `tenley.ratings_ids`
+- `tenley.rating_ids`
 
   This returns an array of `tenley`'s rating `id`s.
 
@@ -116,7 +116,7 @@ From within the console run ...
   We're creating a new `Rating` and associating it with `tenley`.  The new `Rating` object has its `dog_id` attribute set to `tenley`'s `id`.  The new `Rating` object's `id` is `nil` because it's not been saved to the database; this object only exits in Ruby.
 
 - `tenley.ratings`
- 
+
  If we look in the returned collection of `Rating` objects, we'll see our `Rating` with the `id` `nil`.
 
 - `tenley.save`
@@ -130,7 +130,7 @@ From within the console run ...
 - `rating_ids = tenley.rating_ids`
 
   Once again, we're retrieving the `id`'s of `tenley`'s ratings.  This time, we're assigning the returned array to the variable `rating_ids`.
-  
+
 - `tenley.ratings = []`
 
   We can assign a collection of ratings to be `tenley`'s ratings.  Here we've used an empty array.  We're saying that `tenley` has no ratings.  To accomplish this, Active Record updates the `dog_id` value of all `tenley`'s previous ratings to be `nil`.
