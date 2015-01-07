@@ -16,28 +16,16 @@ In this challenge we'll take a look at `has_many`.  A has many association betwe
 
 ```ruby
 class Dog < ActiveRecord::Base
-  include USGeography
 
   has_many :ratings
   belongs_to :owner, { class_name: "Person" }
 
-  validates :name, :license, :owner_id, { :presence => true }
-  validates :license, { :uniqueness => true }
-  validates :license, format: { with: /\A[A-Z]{2}\-/ }
-  validates :age, { :numericality => { greater_than_or_equal_to: 0 },
-                    :allow_blank  => true }
-
-  validate :license_from_valid_state
-
-  def license_from_valid_state
-	# add errors under certain conditions
-  end
 end
 ```
 
 *Figure 2.*  Code for `Dog` class.
 
-Figure 2 shows an updated `Dog` class that defines the association between `Dog` and `Rating` from the perspective of `Dog`.  Note the line `has_many :ratings`.  
+Figure 2 shows an updated `Dog` class that defines the association between `Dog` and `Rating` from the perspective of `Dog`.  Note the line `has_many :ratings`.
 
 Just like `belongs_to`, `has_many` is a method that will be called on the class we're defining—in this case `Dog`.  `has_many` is going to provide us with instance methods to call on `Dog` objects.  The set of methods provided by `has_many` is different than the methods provided by `belongs_to`.
 
