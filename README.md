@@ -87,19 +87,26 @@ Before we begin, we need to create, migrate, and seed our database.  We'll seed 
 We're going to work with our `Dog` class from within the Rake console.  Let's begin by opening the console.  Once it's open, we can begin interacting with our models.  As we work through each release, we should execute the provided example code ourselves and look at the return values.
 
 
-### Release 0: Exploring `has_many` Association Methods
+### Release 0: Getting a Dog's Ratings
+```ruby
+tenley = Dog.find_by(name: "Tenley")
+# => #<Dog id: 1, name: "Tenley", license: "OH-9384764", ... >
+tenley.ratings
+# => #<ActiveRecord::Associations::CollectionProxy [#<Rating id: 1, ... >, #<Rating id: 3, ... >, #<Rating id: 5, ... >]>
+```
+*Figure 5*.  Getting a dog's ratings.
 
-Use the provided Rake task to open the console:  `bundle exec rake console`.
 
-From within the console run ...
+We're going to explore the methods generated when we declare a has many association, and we'll start with the getter method. When we declare that a dog has many ratings, we're provided with a method to get the dog's ratings. So, given an instance of the `Dog` class, we can ask the dog for its ratings.
 
-- `tenley = Dog.find_by(name: "Tenley")`
+In Figure 5, we get an instance of the `Dog` class, the dog named Tenley, and assign it to the variable `tenley`. We then call the `#ratings` getter method provided to us by the `.has_many` method. Through this method, we're able to retrieve Tenley's ratings (i.e. the ratings that were made for Tenley).
 
-  This gives us a `Dog` object to work with.  The object has been assigned to the variable `tenley`.
+What SQL is executed when we get Tenley's ratings?  Active Record knows that Tenley's id is 1.  So, it can go to the ratings table and get all the records with a dog id of 1.
 
-- `tenley.ratings`
+What does the `#ratings` getter method return?  It returns a collection of ratings that were made for Tenley.  If we look at the return value in the console, we'll see that the collection holds ratings 1, 3, and 5.  The exact object type is probably new to us.  It's an `ActiveRecord::Associations::CollectionProxy` object.  It's not an array, but it has very similar behaviors.
 
-  We're using the *getter* method supplied by `has_many`.  This returns an `ActiveRecord::Associations::CollectionProxy` object.  It's not an array, but it behaves very similar to an array.  All `tenley`'s ratings are inside this collection.
+
+
 
 - `tenley.ratings.count`
 
