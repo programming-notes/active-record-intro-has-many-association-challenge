@@ -190,10 +190,11 @@ What happened to Tenley's old ratings?  The records are still in the database.  
 We previously saved the ids of Tenley's old ratings in the variable `rating_ids`.  We use the ids to give Tenley back her ratings.  We assign a new collection of ratings by calling `#rating_ids=` and passing an array of ids.  We can see that Active Record makes a series of `UPDATE` SQL queries—one for each of the ids—to reestablish the connection between the rating and Tenley.
 
 
+### Release 5:  Declare Has Many Associations
+In the *Summary* section, two other has many associations were described:
 
+- an owner/person has many dogs
+- a judge/person has many ratings
 
-### Release 2:  Write `has_many` Associations
+Declare these associations in the appropriate classes. We'll be breaking convention, so we'll need to configure our associations. Tests have been provided to let us know whether or not our associations have been set up properly.
 
-At the end of the *Summary* section, two other has many associations were described.  A person has many dogs.  A person has many ratings.
-
-Define these associations in the appropriate classes.  These associations break convention, so we'll have to configue the `has_many` association.  Tests have been provided to guide development.  When all of the tests are complete, submit the challenge.
