@@ -162,41 +162,35 @@ In Figure 8, we instantiate a new rating for Tenley, using the `#ratings.build` 
 To persist the new record in the database, we call save on Tenley, not on the rating itself.  Look at the SQL that's executed when we ran `tenley.save`.  Saving Tenley cascaded down to Tenley's ratings, resulting in a SQL `INSERT` statement for the ratings table.
 
 
+### Release 4:  Mass Reassigning a Dog's Ratings
+```ruby
+rating_ids = tenley.rating_ids
+# => [1, 3, 5, 8, 9]
+tenley.ratings = []
+# => []
+tenley.ratings.empty?
+# => true
+Rating.find rating_ids
+# => [#<Rating id: 1, ... dog_id: nil, ... >, #<Rating id: 3, ... >, #<Rating id: 5, ... >, #<Rating id: 8, ... >, #<Rating id: 9, ... >]
+tenley.rating_ids= rating_ids
+# => [1, 3, 5, 8, 9]
+tenley.ratings
+# => #<AR::Assoc::CollectionProxy [#<Rating id: 1, ... >, #<Rating id: 3, ... >, #<Rating id: 5,  ... >, #<Rating id: 8, ... >, #<Rating id: 9, ... >]>
+```
+*Figure 9*.  Examples of assigning a collection of ratings to a dog.
+
+In the previous two releases, we've looked at associating ratings with a dog one at a time.  But we can also do a mass reassignment of a dog's ratings.
+
+In Figure 9, we look at two different ways of assigning a collection of ratings to a dog: by giving a dog a new collection and by telling a dog the ids of ratings.
+
+We begin by getting the ids of Tenley's ratings, and assigning them to the variable `rating_ids`.  We see that ratings 1, 2, 3, 8, and 9 were made for Tenley.  Then we reassign Tenley's ratings, using the `#ratings=` setter method.  We pass an empty array, which results in Tenley having no ratings.  Tenley's ratings collection is now empty.  We could have passed an array containing ratings; the important take away is that we can reassign a dog's collection of ratings.
+
+What happened to Tenley's old ratings?  The records are still in the database.  When we find those ratings by their ids, we see that their dog id values have been updated to be `nil`.  The link between these ratings and Tenley has been broken. They're ratings, but they're not associated with any dog.
+
+We previously saved the ids of Tenley's old ratings in the variable `rating_ids`.  We use the ids to give Tenley back her ratings.  We assign a new collection of ratings by calling `#rating_ids=` and passing an array of ids.  We can see that Active Record makes a series of `UPDATE` SQL queries—one for each of the ids—to reestablish the connection between the rating and Tenley.
 
 
-- `tenley.rating_ids`
 
-  This returns an array of `tenley`'s rating `id`s.
-
-- `tenley.ratings.where(cuteness: 10)`
-
-  Here we're looking for all of `tenley`'s ratings where her cuteness was judged to be a 10.  Active Record interprets this method chain and runs one query:  `SELECT "ratings".* FROM "ratings"  WHERE "ratings"."dog_id" = ? AND "ratings"."cuteness" = 10  [["dog_id", 1]]`.
-
-- `rating_ids = tenley.rating_ids`
-
-  Once again, we're retrieving the `id`'s of `tenley`'s ratings.  This time, we're assigning the returned array to the variable `rating_ids`.
-
-- `tenley.ratings = []`
-
-  We can assign a collection of ratings to be `tenley`'s ratings.  Here we've used an empty array.  We're saying that `tenley` has no ratings.  To accomplish this, Active Record updates the `dog_id` value of all `tenley`'s previous ratings to be `nil`.
-
-- `tenley.ratings.empty?`
-
-  We can see that, in deed, `tenley` has no more ratings.
-
-- `Rating.find rating_ids`
-
-  We previously saved the `id`s of `tenley`'s old ratings in the variable `rating_ids`.  Now we're using these `id`s to find those ratings in the database.  In the collection returned to us, we can see that all of the included `Rating` objects have a `dog_id` of `nil`.  The link between these ratings and `tenley` has been broken.
-
-- `tenley.rating_ids= rating_ids`
-
-  We're giving `tenley` back her ratings.  We can assign a new collection of ratings by calling `#rating_ids=` and passing an array of ids in the `ratings` table.  We can see that Active Record makes a series of `UPDATE` SQL queries—one for each of the ids—to reestablish the connection between the rating and `tenley`.
-
-- `tenley.ratings`
-
-  We can see that `tenley` has her ratings back.
-
-- `exit`
 
 ### Release 2:  Write `has_many` Associations
 
