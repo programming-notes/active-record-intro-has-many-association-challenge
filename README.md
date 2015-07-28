@@ -1,51 +1,75 @@
-# Active Record Intro:  `has_many` Association
+# Active Record Intro:  Has Many
 
 ## Summary
 
 ![Database Schema](schema_design_new.png)
 
-*Figure 1*.  Database schema.
+*Figure 1*.  Schema design for this challenge, showing connections between primary keys and foreign keys.
 
-In the *Active Record Intro: `belongs_to` Association* challenge, we took the schema shown in Figure 1 and wrote the associations between our classes where one belongs to another:
+This challenge assumes that we've completed and are comfortable with the material from the Active Record Intro challenge on the belongs to association.  Working with the schema shown in Figure 1, in that challenge we wrote a few belongs to associations for our models:
 
-- A dog belongs to an owner.
-- A rating belongs to a judge.
-- A rating belongs to a dog.
+- a dog belongs to an owner/person
+- a rating belongs to the judge/person who did the rating
+- a rating belongs to the dog that was rated
 
-In this challenge we'll take a look at `has_many`.  A has many association between two classes is the inverse of the belongs to association.  An owner person has many dogs, a judge has many ratings, and a dog has many ratings.  Only, our owners and judges are really `People` objects, so a person has many dogs and has many ratings.
+In this challenge we'll take a look at the *has many* association.  A has many association is the inverse of the belongs to association; it's the other side of a one-to-many relationship.  Taking the belongs to associations that we wrote for our models, we can write inverse has many associations:
 
+- an owner/person has many dogs
+- a judge/person has many ratings
+- a dog has many ratings
+
+### Identifying a Has Many Association
+
+As with the belongs to association, matching foreign keys to primary keys makes the has many association possible.  We're associating two models with each other; the table of one model needs a foreign key that points the the primary key on the table of the other model.
+
+When we declare a belongs to association, on which model's table would we find the foreign key?  On which the primary key?  The table of the model that belongs to the other model would contain the foreign key.  So, based on our schema, we can say that a rating belongs to a dog.
+
+The has many association is the inverse.  Any time a model's table hold a foreign key that points to another model, we can say this other model has many of the model.  In our schema, we can say that a dog has many ratings because the table for the `Rating` class has a foreign key that points to a dog.
+
+
+### Declaring a Has Many Association
 ```ruby
 class Dog < ActiveRecord::Base
-
-  has_many :ratings
   belongs_to :owner, { class_name: "Person" }
-
+  has_many :ratings
 end
 ```
 
-*Figure 2.*  Code for `Dog` class.
+*Figure 2.*  Code for the class `Dog` with both a belongs to and has many association defined.
 
-Figure 2 shows an updated `Dog` class that defines the association between `Dog` and `Rating` from the perspective of `Dog`.  Note the line `has_many :ratings`.
+Figure 2 shows a `Dog` class that declares two associations.  We should be familiar with declaring a belongs to association.  We're going to look at how to declare a has many association—it's very similar.
 
-Just like `belongs_to`, `has_many` is a method that will be called on the class we're defining—in this case `Dog`.  `has_many` is going to provide us with instance methods to call on `Dog` objects.  The set of methods provided by `has_many` is different than the methods provided by `belongs_to`.
+Before we look at the syntax for declaring a has many association, what are the different parts in declaring the belongs to association?  What are `belongs_to`, `:owner`, and `{ class_name: "Person" }`?
 
-We will still get *getter* and *setter* methods.  And again, the method names are derived from the argument passed to the `has_many` method.  In this case, we passed `:ratings`.  Therefore, the getter method is `#ratings` and the setter method is `ratings=`.
+Like `.belongs_to`, `.has_many` is a method that will be called on the class we're defining—in this case `Dog`.  It serves the same purpose, too:  `.has_many` is going to provide us with instance methods that allow a dog to interact with ratings.  However, the set of methods provided by `.has_many` is different from the methods provided by `.belongs_to`.
 
-We get a number of additional methods.  For example, we get a method for shoveling a `Rating` object into a dog's ratings:  `#ratings.<<`.  We also get getter and setter methods that work with the `id` value of the associated objects.  So, for any dog, we can get the `id` values of its ratings:  `#rating_ids`.  Or we can reassign the ratings that a dog has by providing the `id` values:  `#rating_ids=`.  And, as with `belongs_to`, we also get methods for building and creating ratings associated with a dog:  `#ratings.build`, `#ratings.create`, and `#ratings.create!`.  For a more comprehensive description of the methods provided, read the [apidock description](http://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many).
+As with declaring a belongs to association, we will get *getter* and *setter* methods.  And again, the method names are derived from the first argument passed to `.has_many`.  In this case, we passed `:ratings`.  Therefore, the getter method is `#ratings` and the setter method is `#ratings=`.  When we declare a has many association, the first argument must be plural.
+
+We also get a number of additional methods.  For example, we get a method for shoveling a `Rating` object into a dog's collection of ratings:  `#ratings.<<`.  We also get getter and setter methods that work with the id values of the associated objects rather than the objects themselves: `#rating_ids` and `#rating_ids=`.  As with `.belongs_to`, we also get methods for building and creating ratings associated with a dog:  `#ratings.build`, `#ratings.create`, and `#ratings.create!`.
+
+We'll explore some of these methods in this challenge.  For a more comprehensive list and description of the methods provided, read the [API Dock description](http://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many).
+
 
 ### Active Record Conventions
+When we declare a has many association, the conventions we'll follow are very similar to the conventions when declaring a belongs to association.  And, we'll configure broken conventions in the same way.
 
-We're expected to follow the same conventions with `has_many` as with `belongs_to`.
+When we declare a has many association, we pass an argument that says what we we have (e.g. `:ratings` in our example).  Active Record expects to find a class with a name matching this argument.  In this case, we passed `:ratings`, and Active Record expects to find a `Rating` class.  We have one, so we're all right.
 
-When we define a has many association, Active Record expects to find a class with a name matching the argument passed in.  In this case, we passed `:ratings`, so Active Record expects to find a `Rating` class.  We have one, so we're all right.  Also, Active Record needs to know how to identify the `Rating` that a `Dog` object has.  In other words, it needs to know the foreign key on the `ratings` table that matches the `id` of the `Dog` object.  Convention indicates that the foreign key should be named `dog_id`.  Again, we're following convention, so this association just works.
+In addition, Active Record needs to know how to identify the many ratings that a dog has.  In other words, it needs to know the foreign key on the ratings table that points to a dog.  The convention is that the name of the foreign key will match the name of the model declaring the has many association.  In our case, the `Dog` class is declaring the has many association, so the ratings table should have a foreign key field named `dog_id`.  Again, we're following convention.
 
-If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exits.  If they're not there we can pass that information along:
+```ruby
+class Dog < ActiveRecord::Base
+  has_many :ratings, { :class_name => "Rating", :foreign_key => :dog_id }
+end
+```
+*Figure 3*.  Passing an options hash when declaring a has many association.
 
-`has_many :ratings, { :class_name => "Rating", :foreign_key => :dog_id }`
+In our example, we're following conventions, so we do not need to configure our association.  If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `.has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exits.  If they're not there we can pass that information along (see Figure 3).
 
-Earlier in this *Summary* section, we identified a couple more has many associations.  A person has many dogs.  If in the `Person` class we defined the association `has_many :dogs`, it would not work because we've broken convention.  Active Record will expect that a class `Dog` exists, which we do have.  It will also expect that the `dogs` table has a `person_id` foreign key field, but looking at the schema design in Figure 1, there is no `person_id` field on the `dogs` table.  We've broken convention.  Instead, there is an `owner_id` field, so we would need to specify the foreign key field that Active Record should use.
+Earlier in this *Summary* section, we identified a couple more has many associations.  A person, as an owner, has many dogs.  If in the `Person` class we declared the association `has_many :dogs`, would it work?  What conventions would Active Record expect?
 
-We would find ourselves in a similar situation if we wanted to define a has many association between `Person` and `Rating`.  If we wanted to say in the `Person` class `has_many :ratings`, we would violate convention.
+Active Record will expect that a class `Dog` exists.  We have one, so we've not broken that convention.  It will also expect that the dogs table has a `person_id` foreign key field, but looking at our schema in Figure 1, there is no `person_id` field on the `dogs` table.  We've broken convention.  Instead, there is an `owner_id` field, and we would need to configure our association by specifying the foreign key field that Active Record should use.
+
 
 ## Releases
 
