@@ -64,7 +64,7 @@ end
 ```
 *Figure 3*.  Passing an options hash when declaring a has many association.
 
-In our example, we're following conventions, so we do not need to configure our association.  If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `.has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exit.  If they're not there we can pass that information along (see Figure 3).
+In our example, we're following conventions, so we do not need to configure our association.  If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `.has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exist.  If they're not there we can pass that information along (see Figure 3).
 
 Earlier in this *Summary* section, we identified a couple more has many associations.  A person, as an owner, has many dogs.  If in the `Person` class we declared the association `has_many :dogs`, would it work?  What conventions would Active Record expect?
 
