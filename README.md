@@ -1,148 +1,213 @@
-# Active Record Intro:  `has_many` Association
+# Active Record Intro:  Has Many
 
 ## Summary
 
 ![Database Schema](schema_design_new.png)
 
-*Figure 1*.  Database schema.
+*Figure 1*.  Schema design for this challenge, showing connections between primary keys and foreign keys.
 
-In the *Active Record Intro: `belongs_to` Association* challenge, we took the schema shown in Figure 1 and wrote the associations between our classes where one belongs to another:
+This challenge assumes that we've completed and are comfortable with the material from the [Active Record Intro challenge on the belongs to association](../../../active-record-intro-belongs-to-association-challenge).  Working with the schema shown in Figure 1, in that challenge we wrote a few belongs to associations for our models:
 
-- A dog belongs to an owner.
-- A rating belongs to a judge.
-- A rating belongs to a dog.
+- a dog belongs to an owner/person
+- a rating belongs to the judge/person who did the rating
+- a rating belongs to the dog that was rated
 
-In this challenge we'll take a look at `has_many`.  A has many association between two classes is the inverse of the belongs to association.  An owner person has many dogs, a judge has many ratings, and a dog has many ratings.  Only, our owners and judges are really `People` objects, so a person has many dogs and has many ratings.
+In this challenge we'll take a look at the *has many* association.  A has many association is the inverse of the belongs to association; it's the other side of a one-to-many relationship.  Taking the belongs to associations that we wrote for our models, we can write inverse has many associations:
 
+- an owner/person has many dogs
+- a judge/person has many ratings
+- a dog has many ratings
+
+### Identifying a Has Many Association
+
+As with the belongs to association, matching foreign keys to primary keys makes the has many association possible.  We're associating two models with each other; the table of one model needs a foreign key that points the the primary key on the table of the other model.
+
+When we declare a belongs to association, on which model's table would we find the foreign key?  On which the primary key?  The table of the model that belongs to the other model would contain the foreign key.  So, based on our schema, we can say that a rating belongs to a dog.
+
+The has many association is the inverse.  Any time a model's table hold a foreign key that points to another model, we can say this other model has many of the model.  In our schema, we can say that a dog has many ratings because the table for the `Rating` class has a foreign key that points to a dog.
+
+
+### Declaring a Has Many Association
 ```ruby
 class Dog < ActiveRecord::Base
-
-  has_many :ratings
   belongs_to :owner, { class_name: "Person" }
-
+  has_many :ratings
 end
 ```
 
-*Figure 2.*  Code for `Dog` class.
+*Figure 2.*  Code for the class `Dog` with both a belongs to and has many association defined.
 
-Figure 2 shows an updated `Dog` class that defines the association between `Dog` and `Rating` from the perspective of `Dog`.  Note the line `has_many :ratings`.
+Figure 2 shows a `Dog` class that declares two associations.  We should be familiar with declaring a belongs to association.  We're going to look at how to declare a has many association—it's very similar.
 
-Just like `belongs_to`, `has_many` is a method that will be called on the class we're defining—in this case `Dog`.  `has_many` is going to provide us with instance methods to call on `Dog` objects.  The set of methods provided by `has_many` is different than the methods provided by `belongs_to`.
+Before we look at the syntax for declaring a has many association, what are the different parts in declaring the belongs to association?  What are `belongs_to`, `:owner`, and `{ class_name: "Person" }`?
 
-We will still get *getter* and *setter* methods.  And again, the method names are derived from the argument passed to the `has_many` method.  In this case, we passed `:ratings`.  Therefore, the getter method is `#ratings` and the setter method is `ratings=`.
+Like `.belongs_to`, `.has_many` is a method that will be called on the class we're defining—in this case `Dog`.  It serves the same purpose, too:  `.has_many` is going to provide us with instance methods that allow a dog to interact with ratings.  However, the set of methods provided by `.has_many` is different from the methods provided by `.belongs_to`.
 
-We get a number of additional methods.  For example, we get a method for shoveling a `Rating` object into a dog's ratings:  `#ratings.<<`.  We also get getter and setter methods that work with the `id` value of the associated objects.  So, for any dog, we can get the `id` values of its ratings:  `#rating_ids`.  Or we can reassign the ratings that a dog has by providing the `id` values:  `#rating_ids=`.  And, as with `belongs_to`, we also get methods for building and creating ratings associated with a dog:  `#ratings.build`, `#ratings.create`, and `#ratings.create!`.  For a more comprehensive description of the methods provided, read the [apidock description](http://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many).
+As with declaring a belongs to association, we will get *getter* and *setter* methods.  And again, the method names are derived from the first argument passed to `.has_many`.  In this case, we passed `:ratings`.  Therefore, the getter method is `#ratings` and the setter method is `#ratings=`.  When we declare a has many association, the first argument must be plural.
+
+We also get a number of additional methods.  For example, we get a method for shoveling a `Rating` object into a dog's collection of ratings:  `#ratings.<<`.  We also get getter and setter methods that work with the id values of the associated objects rather than the objects themselves: `#rating_ids` and `#rating_ids=`.  As with `.belongs_to`, we also get methods for building and creating ratings associated with a dog:  `#ratings.build`, `#ratings.create`, and `#ratings.create!`.
+
+We'll explore some of these methods in this challenge.  For a more comprehensive list and description of the methods provided, read the [API Dock description](http://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many).
+
 
 ### Active Record Conventions
+When we declare a has many association, the conventions we'll follow are very similar to the conventions when declaring a belongs to association.  And, we'll configure broken conventions in the same way.
 
-We're expected to follow the same conventions with `has_many` as with `belongs_to`.
+When we declare a has many association, we pass an argument that says what we we have (e.g. `:ratings` in our example).  Active Record expects to find a class with a name matching this argument.  In this case, we passed `:ratings`, and Active Record expects to find a `Rating` class.  We have one, so we're all right.
 
-When we define a has many association, Active Record expects to find a class with a name matching the argument passed in.  In this case, we passed `:ratings`, so Active Record expects to find a `Rating` class.  We have one, so we're all right.  Also, Active Record needs to know how to identify the `Rating` that a `Dog` object has.  In other words, it needs to know the foreign key on the `ratings` table that matches the `id` of the `Dog` object.  Convention indicates that the foreign key should be named `dog_id`.  Again, we're following convention, so this association just works.
+In addition, Active Record needs to know how to identify the many ratings that a dog has.  In other words, it needs to know the foreign key on the ratings table that points to a dog.  The convention is that the name of the foreign key will match the name of the model declaring the has many association.  In our case, the `Dog` class is declaring the has many association, so the ratings table should have a foreign key field named `dog_id`.  Again, we're following convention.
 
-If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exits.  If they're not there we can pass that information along:
+```ruby
+class Dog < ActiveRecord::Base
+  has_many :ratings, { :class_name => "Rating", :foreign_key => :dog_id }
+end
+```
+*Figure 3*.  Passing an options hash when declaring a has many association.
 
-`has_many :ratings, { :class_name => "Rating", :foreign_key => :dog_id }`
+In our example, we're following conventions, so we do not need to configure our association.  If one of these conventions were broken, we would have to configure the association.  In other words, we'd have to tell Active Record where to look.  We can do that with an optional hash argument that we can pass to the `.has_many` method.  Active Record is going to assume that a specific class and a specific foreign key exits.  If they're not there we can pass that information along (see Figure 3).
 
-Earlier in this *Summary* section, we identified a couple more has many associations.  A person has many dogs.  If in the `Person` class we defined the association `has_many :dogs`, it would not work because we've broken convention.  Active Record will expect that a class `Dog` exists, which we do have.  It will also expect that the `dogs` table has a `person_id` foreign key field, but looking at the schema design in Figure 1, there is no `person_id` field on the `dogs` table.  We've broken convention.  Instead, there is an `owner_id` field, so we would need to specify the foreign key field that Active Record should use.
+Earlier in this *Summary* section, we identified a couple more has many associations.  A person, as an owner, has many dogs.  If in the `Person` class we declared the association `has_many :dogs`, would it work?  What conventions would Active Record expect?
 
-We would find ourselves in a similar situation if we wanted to define a has many association between `Person` and `Rating`.  If we wanted to say in the `Person` class `has_many :ratings`, we would violate convention.
+Active Record will expect that a class `Dog` exists.  We have one, so we've not broken that convention.  It will also expect that the dogs table has a `person_id` foreign key field, but looking at our schema in Figure 1, there is no `person_id` field on the `dogs` table.  We've broken convention.  Instead, there is an `owner_id` field, and we would need to configure our association by specifying the foreign key field that Active Record should use.
+
 
 ## Releases
 
-### Pre-release: Create, Migrate, and Seed the Database
+### Pre-release: Setup
+```
+$ bundle install
+$ bundle exec rake db:create
+$ bundle exec rake db:migrate
+$ bundle exec rake db:seed
+```
+*Figure 4*.  Setting up and seeding the database.
 
-1. Run Bundler to ensure that the proper gems have been installed.
+Before we begin, we need to create, migrate, and seed our database.  We'll seed our database with records for all three models:  `Dog`, `Rating`, and `Person`.  All the files necessary for this are provided:  the migrations and the seeds file.  We simply need to run the Rake tasks (see Figure 4).
 
-2. Use the provided Rake task to create the database.
+We're going to work with our `Dog` class from within the Rake console.  Let's begin by opening the console.  Once it's open, we can begin interacting with our models.  As we work through each release, we should execute the provided example code ourselves and look at the return values.
 
-3. Use the provided Rake task to migrate the database.
 
-4. Use the provided Rake task to seed the database.  This will seed all three tables with data.
+### Release 0: Getting a Dog's Ratings
+```ruby
+tenley = Dog.find_by(name: "Tenley")
+# => #<Dog id: 1, name: "Tenley", license: "OH-9384764", ... >
+tenley.ratings
+# => #<ActiveRecord::Associations::CollectionProxy [#<Rating id: 1, ... >, #<Rating id: 3, ... >, #<Rating id: 5, ... >]>
+```
+*Figure 5*.  Getting a dog's ratings.
 
-### Release 0: Exploring `has_many` Association Methods
+We're going to explore the methods generated when we declare a has many association, and we'll start with the getter method. When we declare that a dog has many ratings, we're provided with a method to get the dog's ratings. So, given an instance of the `Dog` class, we can ask the dog for its ratings.
 
-Use the provided Rake task to open the console:  `bundle exec rake console`.
+In Figure 5, we get an instance of the `Dog` class, the dog named Tenley, and assign it to the variable `tenley`. We then call the `#ratings` getter method provided to us by the `.has_many` method. Through this method, we're able to retrieve Tenley's ratings (i.e. the ratings that were made for Tenley).
 
-From within the console run ...
+What SQL is executed when we get Tenley's ratings?  Active Record knows that Tenley's id is 1.  So, it can go to the ratings table and get all the records with a dog id of 1.
 
-- `tenley = Dog.find_by(name: "Tenley")`
+What does the `#ratings` getter method return?  It returns a collection of ratings that were made for Tenley.  If we look at the return value in the console, we'll see that the collection holds ratings 1, 3, and 5.  The exact object type is probably new to us.  It's an `ActiveRecord::Associations::CollectionProxy` object.  It's not an array, but it has very similar behaviors.
 
-  This gives us a `Dog` object to work with.  The object has been assigned to the variable `tenley`.
 
-- `tenley.ratings`
+### Release 1: Getting the Count of a Dog's Ratings
+```ruby
+tenley.ratings.count
+# => 3
+```
+*Figure 6*.  Getting the number of ratings made for a dog.
 
-  We're using the *getter* method supplied by `has_many`.  This returns an `ActiveRecord::Associations::CollectionProxy` object.  It's not an array, but it behaves very similar to an array.  All `tenley`'s ratings are inside this collection.
+In Figure 6, we're getting the number of ratings that have been made for Tenley.  And, we can see that three ratings have been made for Tenley.
 
-- `tenley.ratings.count`
+If we look at the syntax, we're chaining two method calls: one to `#ratings` and one `#count`.  But this is not executed the way we might expect.  In Ruby, we would expect calling `tenley.ratings` to be evaluated and then `#count` would be called on the return value.
 
-  This returns the number of ratings that `tenley` has.  The method that were calling is `#ratings.count`.  It was one of the methods created when we said declared `has_many :ratings` in the class `Dog`.  In the console output, look at the SQL query that was run:  `SELECT COUNT(*) FROM "ratings"  WHERE "ratings"."dog_id" = ?  [["dog_id", 1]]`.
+Active Record will handle this differently.  Active Record interprets this chain as one method: `#ratings.count`.  When the code in Figure 6 is executed, the collection of Tenley's ratings is not returned and then counted.  Instead, Active Record queries the database for the number of ratings made for Tenley.  In the console output, we can see the SQL that was executed:  `SELECT COUNT(*) FROM "ratings" WHERE "ratings"."dog_id" = ?  [["dog_id", 1]]`.
 
-  This is not a method chain the way we're used to seeing it in Ruby (i.e., call `#ratings` on `tenley` and then call `#count` on the return value).  Active Record understands `#ratings.count` and makes the appropriate SQL query.
+`#ratings.count` is just one of the method chains that Active Record will interpret as one method with regard to a dog's ratings.  We've seen such chain interpretation before when we learned about retrieving data from the database (e.g. `Rating.where(cuteness: 10).order(dog_id: :asc)`).  We'll see more examples like these in later releases.  Let's be sure to take the time to look at the SQL generated by our code, so that we can better understand what Active Record is doing for us.
 
-- `new_rating = Rating.new(coolness: 8, cuteness: 10, judge_id: 4)`
+### Release 2: Giving a Dog Another Rating
+```ruby
+new_rating = Rating.new(coolness: 8, cuteness: 10, judge_id: 4)
+# => #<Rating id: nil, coolness: 8, ... dog_id: nil, ... >
+tenley.ratings << new_rating
+# => #<ActiveRecord::Associations::CollectionProxy [ ... ]>
+new_rating
+# => #<Rating id: 8, coolness: 8, ... dog_id: 1, ... >
+tenley.ratings.include? new_rating
+# => true
+```
+*Figure 7*. Giving a dog another rating by shoveling the rating into the dog's collection of ratings.
 
-  We're making a new `Rating` object that we are going to put into `tenley`'s ratings.  Looking at the new object, we can see that its `id` and `dog_id` attributes are both `nil`.
+In Figure 7 we make a new rating that we want to associate with Tenley.  When we instantiate the new record, we don't specify the id of the dog for which the rating was made.  Looking at the new rating, we can see that both its id and dog id attributes are both `nil`.  We'll let Active Record handle assigning these values for us.
 
-- `tenley.ratings << new_rating`
+There are multiple ways of associating a dog with a rating.  One way is to shovel a rating into the dog's collection of ratings—as is done in Figure 7.  We've used the `#ratings.<<` method chain.  We use this much like we would use the `Array#<<` method.  We take Tenley's collection of ratings and shovel in another `Rating` object.  What SQL is executed when we shovel in the new rating?
 
-  We've used the `#ratings.<<` method that `has_many` provided for us.  We use this much like we would use the `Array#<<` method.  We're taking `tenley`'s collection of ratings and shoveling in another `Rating` object.
+After calling `#ratings.<<`, when we look at our new rating, it has a value for id and dog_id.  When we shoveled the new rating into Tenley's collection of ratings, Active Record updated the dog id attribute of new record to match Tenley's id attribute.—it also persisted the new record, which assigned the id attribute.
 
-- `new_rating`
 
-  If we look at our `new_rating` object, it now has a value for `id` and `dog_id`.  When we shoveled `new_rating` into `tenley`'s collection of ratings, Active Record updated the `dog_id` attribute of `new_record` to match `tenley's` `id` attribute.  And, it saved `new_record`, which assigned the `id` attribute.
+### Release 3: Building a Rating for a Dog
+```ruby
+tenley.ratings.build(coolness: 7, cuteness: 9, judge_id: 5)
+# => #<Rating id: nil, coolness: 7, ... dog_id: 1, ... >
+tenley.ratings
+# => #<AR::Assoc::CollectionProxy [ ... , #<Rating id: nil, coolness: 7, ... >]>
+tenley.save
+# => true
+tenley.ratings
+# => #<AR::Assoc::CollectionProxy [ ... , #<Rating id: 9, coolness: 7, ... >]>
+```
+*Figure 8*.  Building a rating that will be associated with a dog.
 
-- `tenley.ratings.include? new_rating`
+In the previous release, we instantiated a new rating and then associated it with a dog.  In Figure 8, we're building a rating that is associated with a specific dog from the time it's instantiated.
 
-  Running this, we should see that `tenley`'s ratings now include our `new_rating` object.  Note that Active Record did not query the database when we ran this.  `tenley`'s records had already been loaded.
+When we learned about the methods generated by the `.belongs_to` method, we saw methods for a rating like `#build_dog` and `#create_dog`.  Similar methods are generated by `.has_many`.  For a dog with many ratings, we have the methods `ratings.build`, `ratings.create`, and `ratings.create!`.
 
-- `tenley.rating_ids`
+In Figure 8, we instantiate a new rating for Tenley, using the `#ratings.build` method.  The new rating has its dog id attribute set to Tenley's id at the time it is instantiated.  After building the new rating, we can see that the new rating is now in Tenley's ratings collection.  The new rating's id is 'nil' because it's not been persisted yet.  The object only lives in-memory in Ruby.
 
-  This returns an array of `tenley`'s rating `id`s.
+To persist the new record in the database, we call save on Tenley, not on the rating itself.  Look at the SQL that's executed when we ran `tenley.save`.  Saving Tenley cascaded down to Tenley's ratings, resulting in a SQL `INSERT` statement for the ratings table.
 
--  `tenley.ratings.build(coolness: 7, cuteness: 9, judge_id: 5)`
 
-  We're creating a new `Rating` and associating it with `tenley`.  The new `Rating` object has its `dog_id` attribute set to `tenley`'s `id`.  The new `Rating` object's `id` is `nil` because it's not been saved to the database; this object only exits in Ruby.
+### Release 4:  Mass Reassigning a Dog's Ratings
+```ruby
+rating_ids = tenley.rating_ids
+# => [1, 3, 5, 8, 9]
+tenley.ratings = []
+# => []
+tenley.ratings.empty?
+# => true
+Rating.find rating_ids
+# => [#<Rating id: 1, ... dog_id: nil, ... >, #<Rating id: 3, ... >, #<Rating id: 5, ... >, #<Rating id: 8, ... >, #<Rating id: 9, ... >]
+tenley.rating_ids= rating_ids
+# => [1, 3, 5, 8, 9]
+tenley.ratings
+# => #<AR::Assoc::CollectionProxy [#<Rating id: 1, ... >, #<Rating id: 3, ... >, #<Rating id: 5,  ... >, #<Rating id: 8, ... >, #<Rating id: 9, ... >]>
+```
+*Figure 9*.  Examples of assigning a collection of ratings to a dog.
 
-- `tenley.ratings`
+In the previous two releases, we've looked at associating ratings with a dog one at a time.  But we can also do a mass reassignment of a dog's ratings.
 
- If we look in the returned collection of `Rating` objects, we'll see our `Rating` with the `id` `nil`.
+In Figure 9, we look at two different ways of assigning a collection of ratings to a dog: by giving a dog a new collection and by telling a dog the ids of ratings.
 
-- `tenley.save`
+We begin by getting the ids of Tenley's ratings, and assigning them to the variable `rating_ids`.  We see that ratings 1, 2, 3, 8, and 9 were made for Tenley.  Then we reassign Tenley's ratings, using the `#ratings=` setter method.  We pass an empty array, which results in Tenley having no ratings.  Tenley's ratings collection is now empty.  We could have passed an array containing ratings; the important take away is that we can reassign a dog's collection of ratings.
 
-  When we call save here on `tenley`, `tenley`'s newly built rating was also saved.
+What happened to Tenley's old ratings?  The records are still in the database.  When we find those ratings by their ids, we see that their dog id values have been updated to be `nil`.  The link between these ratings and Tenley has been broken. They're ratings, but they're not associated with any dog.
 
-- `tenley.ratings.where(cuteness: 10)`
+We previously saved the ids of Tenley's old ratings in the variable `rating_ids`.  We use the ids to give Tenley back her ratings.  We assign a new collection of ratings by calling `#rating_ids=` and passing an array of ids.  We can see that Active Record makes a series of `UPDATE` SQL queries—one for each of the ids—to reestablish the connection between the rating and Tenley.
 
-  Here we're looking for all of `tenley`'s ratings where her cuteness was judged to be a 10.  Active Record interprets this method chain and runs one query:  `SELECT "ratings".* FROM "ratings"  WHERE "ratings"."dog_id" = ? AND "ratings"."cuteness" = 10  [["dog_id", 1]]`.
 
-- `rating_ids = tenley.rating_ids`
+### Release 5:  Declare Has Many Associations
+In the *Summary* section, two other has many associations were described:
 
-  Once again, we're retrieving the `id`'s of `tenley`'s ratings.  This time, we're assigning the returned array to the variable `rating_ids`.
+- an owner/person has many dogs
+- a judge/person has many ratings
 
-- `tenley.ratings = []`
+Declare these associations in the appropriate classes. We'll be breaking convention, so we'll need to configure our associations. Tests have been provided to let us know whether or not our associations have been set up properly.
 
-  We can assign a collection of ratings to be `tenley`'s ratings.  Here we've used an empty array.  We're saying that `tenley` has no ratings.  To accomplish this, Active Record updates the `dog_id` value of all `tenley`'s previous ratings to be `nil`.
 
-- `tenley.ratings.empty?`
+### Release 6: Explore Methods Generated by Has Many
 
-  We can see that, in deed, `tenley` has no more ratings.
+We've briefly looked at the methods generated when we declare a has many association. We need practice using them. Let's take some time to explore these methods in the console. Pull people and dogs from the database or create new ones and explore the getter and setter methods generated by their has many associations. Reassign an owner's dogs and a judge's ratings.  Reassign with collections and with ids. Build or create new dogs for owners. Look at the SQL generated when we run these methods; is it what we expect? In general, build familiarity with these methods before moving on.
 
-- `Rating.find rating_ids`
 
-  We previously saved the `id`s of `tenley`'s old ratings in the variable `rating_ids`.  Now we're using these `id`s to find those ratings in the database.  In the collection returned to us, we can see that all of the included `Rating` objects have a `dog_id` of `nil`.  The link between these ratings and `tenley` has been broken.
+### Conclusion
+As has been said in other challenges, Active Record associations are going to play a big role in our applications as we move through Dev Bootcamp.  The has many association is one of the major association types. We need to be familiar with it: both how to declare the association and how to employ the methods provided to us when we make the declaration.
 
-- `tenley.rating_ids= rating_ids`
+In declaring the association, we should be familiar with the basic syntax. But, before we can declare the association, we need to be able to identify where declaring a has many association is possible.  Also, we should understand the conventions around naming involved in declaring associations. There will be times when we need or want to break convention, and we'll need to know how to configure our associations. What are the conventions Active Record expects when we declare a has many association?
 
-  We're giving `tenley` back her ratings.  We can assign a new collection of ratings by calling `#rating_ids=` and passing an array of ids in the `ratings` table.  We can see that Active Record makes a series of `UPDATE` SQL queries—one for each of the ids—to reestablish the connection between the rating and `tenley`.
+As for the generated methods, each provides a different way associating objects of one type with another (e.g., a dog with its ratings). By handling all of the foreign key work, these methods make associating objects with each other more convenient. In different circumstances, different approaches will be more or less appropriate.  Do we need to associate a collection of items at one time or just one object? By knowing what options are available and how to use them, we can apply them to write succinct, readable code. In particular, being able to use the getter and setter methods is a fundamental skill we need to have coming out of this challenge.
 
-- `tenley.ratings`
-
-  We can see that `tenley` has her ratings back.
-
-- `exit`
-
-### Release 2:  Write `has_many` Associations
-
-At the end of the *Summary* section, two other has many associations were described.  A person has many dogs.  A person has many ratings.
-
-Define these associations in the appropriate classes.  These associations break convention, so we'll have to configue the `has_many` association.  Tests have been provided to guide development.  When all of the tests are complete, submit the challenge.
